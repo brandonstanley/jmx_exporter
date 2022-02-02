@@ -54,12 +54,14 @@ class JmxScraper {
     private final String password;
     private final boolean ssl;
     private final List<ObjectName> whitelistObjectNames, blacklistObjectNames;
+    private final List<String> blacklistBeanAttributeNames;
     private final JmxMBeanPropertyCache jmxMBeanPropertyCache;
     private final OptionalValueExtractor optionalValueExtractor = new OptionalValueExtractor();
 
     public JmxScraper(String jmxUrl, String username, String password, boolean ssl,
                       List<ObjectName> whitelistObjectNames, List<ObjectName> blacklistObjectNames,
-                      MBeanReceiver receiver, JmxMBeanPropertyCache jmxMBeanPropertyCache) {
+                      List<String> blacklistBeanAttributeNames, MBeanReceiver receiver, 
+                      JmxMBeanPropertyCache jmxMBeanPropertyCache) {
         this.jmxUrl = jmxUrl;
         this.receiver = receiver;
         this.username = username;
@@ -67,6 +69,7 @@ class JmxScraper {
         this.ssl = ssl;
         this.whitelistObjectNames = whitelistObjectNames;
         this.blacklistObjectNames = blacklistObjectNames;
+        this.blacklistBeanAttributeNames = blacklistBeanAttributeNames;
         this.jmxMBeanPropertyCache = jmxMBeanPropertyCache;
     }
 
@@ -146,7 +149,8 @@ class JmxScraper {
                 logScrape(mbeanName, attr, "not readable");
                 continue;
             }
-            if (Arrays.asList("CapturedTables", "MonitoredTables", "RowsScanned").contains(attr.getName())) {
+            if (blacklistBeanAttributeNames.contains(attr.getName())) {
+                logScrape(mbeanName.toString(), "Excluding attribute: '" + attr.getName() + "'");
                 continue;
             }
             name2AttrInfo.put(attr.getName(), attr);
@@ -339,15 +343,15 @@ class JmxScraper {
       List<ObjectName> objectNames = new LinkedList<ObjectName>();
       objectNames.add(null);
       if (args.length >= 3){
-            new JmxScraper(args[0], args[1], args[2], false, objectNames, new LinkedList<ObjectName>(),
+            new JmxScraper(args[0], args[1], args[2], false, objectNames, new LinkedList<ObjectName>(), new LinkedList<String>(),
                     new StdoutWriter(), new JmxMBeanPropertyCache()).doScrape();
         }
       else if (args.length > 0){
-          new JmxScraper(args[0], "", "", false, objectNames, new LinkedList<ObjectName>(),
+          new JmxScraper(args[0], "", "", false, objectNames, new LinkedList<ObjectName>(), new LinkedList<String>(),
                   new StdoutWriter(), new JmxMBeanPropertyCache()).doScrape();
       }
       else {
-          new JmxScraper("", "", "", false, objectNames, new LinkedList<ObjectName>(),
+          new JmxScraper("", "", "", false, objectNames, new LinkedList<ObjectName>(), new LinkedList<String>(),
                   new StdoutWriter(), new JmxMBeanPropertyCache()).doScrape();
       }
     }
