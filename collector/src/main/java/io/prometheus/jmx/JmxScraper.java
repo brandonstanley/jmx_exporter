@@ -20,6 +20,7 @@ import javax.naming.Context;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -143,6 +144,9 @@ class JmxScraper {
             MBeanAttributeInfo attr = attrInfos[idx];
             if (!attr.isReadable()) {
                 logScrape(mbeanName, attr, "not readable");
+                continue;
+            }
+            if (Arrays.asList("CapturedTables", "MonitoredTables", "RowsScanned").contains(attr.getName())) {
                 continue;
             }
             name2AttrInfo.put(attr.getName(), attr);
